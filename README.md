@@ -1,4 +1,4 @@
-# UkraineAlarm APi - nodejs
+# UkraineAlarm - Node.js library for the [Ukraine Alert API](https://api.ukrainealarm.com/)
 
 
 ### Running the server
