@@ -1,0 +1,477 @@
+openapi: 3.0.1
+info:
+  title: Ukraine Alert API
+  contact:
+    name: Stfalcon
+    email: support@stfalcon.com
+  version: "3.0"
+servers:
+- url: /
+security:
+- Token: []
+paths:
+  /api/v3/alerts:
+    get:
+      tags:
+      - Alerts
+      summary: "Області, регіони та громади з тривогами"
+      operationId: apiV3AlertsGET
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AlertRegionModel'
+                x-content-type: application/json
+      x-swagger-router-controller: Alerts
+  /api/v3/alerts/{regionId}:
+    get:
+      tags:
+      - Alerts
+      summary: Статус області/регіону/громади
+      operationId: apiV3AlertsRegionIdGET
+      parameters:
+      - name: regionId
+        in: path
+        description: ID області/регіону/громади
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AlertRegionModel'
+                x-content-type: application/json
+      x-swagger-router-controller: Alerts
+  /api/v3/alerts/regionHistory:
+    get:
+      tags:
+      - Alerts
+      summary: Отримати останніх 25 тривог регіону
+      operationId: apiV3AlertsRegionHistoryGET
+      parameters:
+      - name: regionId
+        in: query
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RegionAlarmsHistory'
+                x-content-type: application/json
+      x-swagger-router-controller: Alerts
+  /api/v3/alerts/status:
+    get:
+      tags:
+      - Alerts
+      summary: Перевірка номеру останньої дії. Використовувати для перевірки необхідності
+        оновлювати дані
+      operationId: apiV3AlertsStatusGET
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AlertModification'
+      x-swagger-router-controller: Alerts
+  /api/v3/regions:
+    get:
+      tags:
+      - Regions
+      summary: "Повертає список усіх областей, регіонів та міст"
+      operationId: apiV3RegionsGET
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegionsViewModel'
+      x-swagger-router-controller: Regions
+  /api/v3/webhook:
+    post:
+      tags:
+      - WebHook
+      summary: Підписка на WebHook про нові сирени та їх відбій. У вебхукі відпрявляється
+        подія тривоги/відбою (приклад в відповіді "200")
+      operationId: apiV3WebhookPOST
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebHookModel'
+          text/json:
+            schema:
+              $ref: '#/components/schemas/WebHookModel'
+          application/*+json:
+            schema:
+              $ref: '#/components/schemas/WebHookModel'
+      responses:
+        "200":
+          description: Success
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/AlertRegionModel'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AlertRegionModel'
+            text/json:
+              schema:
+                $ref: '#/components/schemas/AlertRegionModel'
+      x-swagger-router-controller: WebHook
+    delete:
+      tags:
+      - WebHook
+      summary: Відписка на WebHook про нові сирени та їх відбій
+      operationId: apiV3WebhookDELETE
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebHookModel'
+          text/json:
+            schema:
+              $ref: '#/components/schemas/WebHookModel'
+          application/*+json:
+            schema:
+              $ref: '#/components/schemas/WebHookModel'
+      responses:
+        "200":
+          description: Success
+      x-swagger-router-controller: WebHook
+    patch:
+      tags:
+      - WebHook
+      summary: Оновлення WebHook посилання про нові сирени та їх відбій
+      operationId: apiV3WebhookPATCH
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebHookModel'
+          text/json:
+            schema:
+              $ref: '#/components/schemas/WebHookModel'
+          application/*+json:
+            schema:
+              $ref: '#/components/schemas/WebHookModel'
+      responses:
+        "200":
+          description: Success
+      x-swagger-router-controller: WebHook
+components:
+  schemas:
+    Alert:
+      type: object
+      properties:
+        regionId:
+          type: string
+          nullable: true
+        regionType:
+          $ref: '#/components/schemas/v2RegionType'
+        type:
+          $ref: '#/components/schemas/AlertType'
+        lastUpdate:
+          type: string
+          format: date-time
+      additionalProperties: false
+      example:
+        regionId: regionId
+        regionType: null
+        lastUpdate: 2000-01-23T04:56:07.000+00:00
+        type: UNKNOWN
+    AlertModification:
+      type: object
+      properties:
+        lastActionIndex:
+          type: integer
+          format: int64
+      additionalProperties: false
+      example:
+        lastActionIndex: 0
+    AlertRegionModel:
+      type: object
+      properties:
+        regionId:
+          type: string
+          nullable: true
+        regionType:
+          $ref: '#/components/schemas/v2RegionType'
+        regionName:
+          type: string
+          nullable: true
+        regionEngName:
+          type: string
+          nullable: true
+        lastUpdate:
+          type: string
+          format: date-time
+        activeAlerts:
+          type: array
+          nullable: true
+          items:
+            $ref: '#/components/schemas/Alert'
+      additionalProperties: false
+      example:
+        regionId: regionId
+        regionType: State
+        regionEngName: regionEngName
+        regionName: regionName
+        lastUpdate: 2000-01-23T04:56:07.000+00:00
+        activeAlerts:
+        - regionId: regionId
+          regionType: null
+          lastUpdate: 2000-01-23T04:56:07.000+00:00
+          type: UNKNOWN
+        - regionId: regionId
+          regionType: null
+          lastUpdate: 2000-01-23T04:56:07.000+00:00
+          type: UNKNOWN
+    AlertType:
+      type: string
+      enum:
+      - UNKNOWN
+      - AIR
+      - ARTILLERY
+      - URBAN_FIGHTS
+      - CHEMICAL
+      - NUCLEAR
+      - INFO
+    RegionAlarmModel:
+      type: object
+      properties:
+        regionId:
+          type: string
+          nullable: true
+        startDate:
+          type: string
+          format: date-time
+        endDate:
+          type: string
+          format: date-time
+        duration:
+          $ref: '#/components/schemas/TimeSpan'
+        alertType:
+          $ref: '#/components/schemas/AlertType'
+        regionName:
+          type: string
+          nullable: true
+        isContinue:
+          type: boolean
+      additionalProperties: false
+      example:
+        duration:
+          milliseconds: 5
+          hours: 1
+          seconds: 2
+          totalDays: 7.061401241503109105224211816675961017608642578125
+          ticks: 0
+          totalHours: 9.301444243932575517419536481611430644989013671875
+          totalMilliseconds: 3.61607674925191080461672754609026014804840087890625
+          totalMinutes: 2.027123023002321833274663731572218239307403564453125
+          minutes: 5
+          days: 6
+          totalSeconds: 4.1456080298839363962315474054776132106781005859375
+        alertType: UNKNOWN
+        regionId: regionId
+        endDate: 2000-01-23T04:56:07.000+00:00
+        regionName: regionName
+        isContinue: true
+        startDate: 2000-01-23T04:56:07.000+00:00
+    RegionAlarmsHistory:
+      type: object
+      properties:
+        regionId:
+          type: string
+          nullable: true
+        regionName:
+          type: string
+          nullable: true
+        alarms:
+          type: array
+          nullable: true
+          items:
+            $ref: '#/components/schemas/RegionAlarmModel'
+      additionalProperties: false
+      example:
+        regionId: regionId
+        regionName: regionName
+        alarms:
+        - duration:
+            milliseconds: 5
+            hours: 1
+            seconds: 2
+            totalDays: 7.061401241503109105224211816675961017608642578125
+            ticks: 0
+            totalHours: 9.301444243932575517419536481611430644989013671875
+            totalMilliseconds: 3.61607674925191080461672754609026014804840087890625
+            totalMinutes: 2.027123023002321833274663731572218239307403564453125
+            minutes: 5
+            days: 6
+            totalSeconds: 4.1456080298839363962315474054776132106781005859375
+          alertType: UNKNOWN
+          regionId: regionId
+          endDate: 2000-01-23T04:56:07.000+00:00
+          regionName: regionName
+          isContinue: true
+          startDate: 2000-01-23T04:56:07.000+00:00
+        - duration:
+            milliseconds: 5
+            hours: 1
+            seconds: 2
+            totalDays: 7.061401241503109105224211816675961017608642578125
+            ticks: 0
+            totalHours: 9.301444243932575517419536481611430644989013671875
+            totalMilliseconds: 3.61607674925191080461672754609026014804840087890625
+            totalMinutes: 2.027123023002321833274663731572218239307403564453125
+            minutes: 5
+            days: 6
+            totalSeconds: 4.1456080298839363962315474054776132106781005859375
+          alertType: UNKNOWN
+          regionId: regionId
+          endDate: 2000-01-23T04:56:07.000+00:00
+          regionName: regionName
+          isContinue: true
+          startDate: 2000-01-23T04:56:07.000+00:00
+    RegionsViewModel:
+      type: object
+      properties:
+        states:
+          type: array
+          nullable: true
+          items:
+            $ref: '#/components/schemas/RegionViewModel'
+      additionalProperties: false
+      example:
+        states:
+        - regionChildIds:
+          - null
+          - null
+          regionId: regionId
+          regionType: State
+          regionName: regionName
+        - regionChildIds:
+          - null
+          - null
+          regionId: regionId
+          regionType: State
+          regionName: regionName
+    RegionViewModel:
+      type: object
+      properties:
+        regionId:
+          type: string
+          nullable: true
+        regionName:
+          type: string
+          nullable: true
+        regionType:
+          $ref: '#/components/schemas/v2RegionType'
+        regionChildIds:
+          type: array
+          nullable: true
+          items:
+            $ref: '#/components/schemas/RegionViewModel'
+      additionalProperties: false
+      example:
+        regionChildIds:
+        - null
+        - null
+        regionId: regionId
+        regionType: State
+        regionName: regionName
+    TimeSpan:
+      type: object
+      properties:
+        ticks:
+          type: integer
+          format: int64
+        days:
+          type: integer
+          format: int32
+        hours:
+          type: integer
+          format: int32
+        milliseconds:
+          type: integer
+          format: int32
+        minutes:
+          type: integer
+          format: int32
+        seconds:
+          type: integer
+          format: int32
+        totalDays:
+          type: number
+          format: double
+          readOnly: true
+        totalHours:
+          type: number
+          format: double
+          readOnly: true
+        totalMilliseconds:
+          type: number
+          format: double
+          readOnly: true
+        totalMinutes:
+          type: number
+          format: double
+          readOnly: true
+        totalSeconds:
+          type: number
+          format: double
+          readOnly: true
+      additionalProperties: false
+      example:
+        milliseconds: 5
+        hours: 1
+        seconds: 2
+        totalDays: 7.061401241503109105224211816675961017608642578125
+        ticks: 0
+        totalHours: 9.301444243932575517419536481611430644989013671875
+        totalMilliseconds: 3.61607674925191080461672754609026014804840087890625
+        totalMinutes: 2.027123023002321833274663731572218239307403564453125
+        minutes: 5
+        days: 6
+        totalSeconds: 4.1456080298839363962315474054776132106781005859375
+    v2RegionType:
+      type: string
+      enum:
+      - State
+      - District
+      - Community
+      - "Null"
+    WebHookModel:
+      type: object
+      properties:
+        webHookUrl:
+          type: string
+          nullable: true
+      additionalProperties: false
+  securitySchemes:
+    Token:
+      type: apiKey
+      description: "Використовуйте токен, що був відправлений Вам на пошту після р\
+        еєстрації"
+      name: Authorization
+      in: header
